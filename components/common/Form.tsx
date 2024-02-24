@@ -10,6 +10,7 @@ function Form(props: FormProps): React.ReactNode {
     return schema.map((n) => {
       return (
         <input
+          className="text-black"
           key={n.name}
           type={n.inputType}
           onChange={onChange ? (e) => onChange(e.target.value) : () => {}}

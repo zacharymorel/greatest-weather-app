@@ -5,18 +5,35 @@ import { useEffect, useState } from 'react';
 import Loader from '@/components/common/Loader';
 import Form from '@/components/common/Form';
 
-// TODO: Create Schema for Form
-// TODO: Make sure Form can stack all inputs by Row for simplicity
+// TODO: ADD submit button to form schema.
+// TODO: STYLE FORM
 // TODO: Add geolocation search by city api endpoint
 // TODO: Try auto complete starts after 2 characters?
 // TODO: Store history of places selected and searched in Context global?
 // TODO: Autocomplete will need styling... Is that another type for the form?? A special case or do I create a separate div to show city results??
 
+const formSchema: FormSchema[] = [
+  {
+    inputType: 'text',
+    label: 'Search for a City',
+    name: 'city',
+    placeHolder: 'City...',
+  },
+];
+
 const HomePage = () => {
   const [weather, setWeather] = useState<Weather | null>(null);
   const [fetchingWeather, setFetchingWeather] = useState<boolean>(false);
+  const [weatherSearchFormData, setWeatherSearchFormData] = useState({
+    city: '',
+  });
 
-  const fetchWeather = async () => {
+  function weatherFormSearchOnChangeHandler(newWeatherState: any) {
+    console.log('newWeatherState:: ', newWeatherState);
+    setWeatherSearchFormData(newWeatherState);
+  }
+
+  async function fetchWeather() {
     setFetchingWeather(true);
 
     try {
@@ -29,7 +46,7 @@ const HomePage = () => {
     } finally {
       setFetchingWeather(false);
     }
-  };
+  }
 
   useEffect(() => {
     fetchWeather();
@@ -38,8 +55,14 @@ const HomePage = () => {
   return (
     <div className="flex flex-col min-h-screen text-white">
       <main>
-        <h1 className="text-4xl font-bold text-center">Weather</h1>
-        <Form schema={[]} formData={undefined} />
+        <h1 className="text-4xl font-bold text-center">
+          The Greatest Weather App of all time.
+        </h1>
+        <Form
+          schema={formSchema}
+          formData={weatherSearchFormData}
+          onChange={weatherFormSearchOnChangeHandler}
+        />
 
         <div className="flex flex-col items-center">
           <p>
