@@ -1,41 +1,42 @@
 // Node modules.
-import type { NextApiRequest, NextApiResponse } from "next";
-import axios from "axios";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import axios from 'axios';
 
 // OpenWeatherMap API configuration.
-const API_URL = "http://api.openweathermap.org/data/2.5/weather";
-const API_KEY = "YOUR_API_KEY_HERE"; // Replace this with your OpenWeatherMap API key.
+const API_URL = 'https://api.openweathermap.org/data/3.0/onecall';
+const API_KEY = '1e3bbb9de4342e76eb3f9012f1bb3f72'; // Replace this with your OpenWeatherMap API key.
 
 // GET handler
 async function handleGET(req: NextApiRequest, res: NextApiResponse) {
   try {
     // Extract query parameters for city and units (optional).
-    const { city = "St Petersburg", units = "metric" } = req.query;
+    const { units = 'imperial' } = req.query;
 
     // Make a request to the OpenWeatherMap API.
     const { data } = await axios.get(API_URL, {
       params: {
-        q: city,
+        lat: '42.7095794',
+        lon: '-77.0564464',
         units,
         appid: API_KEY,
       },
     });
-
-    // Return the relevant data.
+    console.log(data.current);
     res.status(200).json({
-      city: data.name,
-      country: data.sys.country,
-      temperature: data.main.temp,
-      condition: data.weather[0].main,
-      humidity: data.main.humidity,
-      wind: data.wind.speed,
+      // city: data.name,
+      // country: data.sys.country,
+      temperature: data.current.temp,
+      condition: data.current.weather[0].main,
+      humidity: data.current.humidity,
+      wind: data.current.wind_speed,
     });
   } catch (error) {
     // Handle errors, such as city not found or API issues.
     if (axios.isAxiosError(error) && error.response) {
       res.status(error.response.status).json({ message: error.response.data });
     } else {
-      res.status(500).json({ message: "Internal server error" });
+      console.log('api/weather error: ', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   }
 }
@@ -47,10 +48,10 @@ export default async function handle(
 ) {
   const { method } = req;
   switch (method) {
-    case "GET":
+    case 'GET':
       return handleGET(req, res);
     default:
-      res.setHeader("Allow", ["GET"]);
+      res.setHeader('Allow', ['GET']);
       res.status(405).end(`Method ${method} Not Allowed`);
   }
 }
