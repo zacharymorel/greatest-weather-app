@@ -1,16 +1,20 @@
 // Node modules.
 import { useEffect, useState } from 'react';
 
+// Relative modules.
+import Loader from '@/components/common/Loader';
+import Form from '@/components/common/Form';
+
+// TODO: Create Schema for Form
+// TODO: Make sure Form can stack all inputs by Row for simplicity
+// TODO: Add geolocation search by city api endpoint
+// TODO: Try auto complete starts after 2 characters?
+// TODO: Store history of places selected and searched in Context global?
+// TODO: Autocomplete will need styling... Is that another type for the form?? A special case or do I create a separate div to show city results??
+
 const HomePage = () => {
   const [weather, setWeather] = useState<Weather | null>(null);
   const [fetchingWeather, setFetchingWeather] = useState<boolean>(false);
-  const loader = (
-    <>
-      <span className="ball -right-1" />
-      <span className="ball -right-2" />
-      <span className="ball -right-3" />
-    </>
-  );
 
   const fetchWeather = async () => {
     setFetchingWeather(true);
@@ -35,53 +39,55 @@ const HomePage = () => {
     <div className="flex flex-col min-h-screen text-white">
       <main>
         <h1 className="text-4xl font-bold text-center">Weather</h1>
+        <Form schema={[]} formData={undefined} />
+
         <div className="flex flex-col items-center">
           <p>
             <span className="mr-6 relative">
-              City: {fetchingWeather ? loader : weather?.city}
+              City: {fetchingWeather ? <Loader /> : ''}
             </span>
             <span className="mr-6 relative">
               {' '}
-              State: {fetchingWeather ? loader : weather?.state}
+              State: {fetchingWeather ? <Loader /> : ''}
             </span>
             <span className="mr-6 relative">
-              Country: {fetchingWeather ? loader : weather?.country}
+              Country: {fetchingWeather ? <Loader /> : ''}
             </span>
           </p>
           <p>
             <span className="mr-6 relative">
               Temperature Now:{' '}
-              {fetchingWeather
-                ? loader
-                : weather?.temperature
-                ? `${weather.temperature} °F`
-                : null}
+              {fetchingWeather ? (
+                <Loader />
+              ) : weather?.temperature ? (
+                `${weather.temperature} °F`
+              ) : null}
             </span>
             <span className="mr-6 relative">
               Condition:{' '}
-              {fetchingWeather
-                ? loader
-                : weather?.condition
-                ? weather.condition
-                : null}
+              {fetchingWeather ? (
+                <Loader />
+              ) : weather?.condition ? (
+                weather.condition
+              ) : null}
             </span>
           </p>
           <p>
             <span className="mr-6 relative">
               Humidity:{' '}
-              {fetchingWeather
-                ? loader
-                : weather?.humidity
-                ? `${weather.humidity} %`
-                : null}
+              {fetchingWeather ? (
+                <Loader />
+              ) : weather?.humidity ? (
+                `${weather.humidity} %`
+              ) : null}
             </span>
             <span className="mr-6 relative">
               Wind:{' '}
-              {fetchingWeather
-                ? loader
-                : weather?.wind
-                ? `${weather.wind} mph`
-                : null}
+              {fetchingWeather ? (
+                <Loader />
+              ) : weather?.wind ? (
+                `${weather.wind} mph`
+              ) : null}
             </span>
           </p>
         </div>
