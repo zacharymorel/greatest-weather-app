@@ -4,7 +4,7 @@ import axios from 'axios';
 
 // OpenWeatherMap API configuration.
 const API_URL = 'https://api.openweathermap.org/data/3.0/onecall';
-const API_KEY = '1e3bbb9de4342e76eb3f9012f1bb3f72'; // Replace this with your OpenWeatherMap API key.
+const API_KEY = process.env.OPEN_WEATHER_MAP; // Replace this with your OpenWeatherMap API key.
 
 // GET handler
 async function handleGET(req: NextApiRequest, res: NextApiResponse) {
