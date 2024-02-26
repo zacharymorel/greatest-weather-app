@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import Loader from '@/components/common/Loader';
 import Form from '@/components/common/Form';
 
-// TODO: ADD submit button to form schema.
 // TODO: STYLE FORM
 // TODO: Add geolocation search by city api endpoint
 // TODO: Try auto complete starts after 2 characters?
@@ -19,6 +18,11 @@ const formSchema: FormSchema[] = [
     name: 'city',
     placeHolder: 'City...',
   },
+  {
+    inputType: 'submit',
+    name: 'submit',
+    buttonValue: 'Get Weather!',
+  },
 ];
 
 const HomePage = () => {
@@ -31,6 +35,10 @@ const HomePage = () => {
   function weatherFormSearchOnChangeHandler(newWeatherState: any) {
     console.log('newWeatherState:: ', newWeatherState);
     setWeatherSearchFormData(newWeatherState);
+  }
+
+  function fetchCity() {
+    console.log('BAM');
   }
 
   async function fetchWeather() {
@@ -53,16 +61,19 @@ const HomePage = () => {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen text-white">
-      <main>
+    <div className="min-h-screen text-white">
+      <main className="flex flex-col space-y-7">
         <h1 className="text-4xl font-bold text-center">
-          The Greatest Weather App of all time.
+          Find Your Current Weather.
         </h1>
-        <Form
-          schema={formSchema}
-          formData={weatherSearchFormData}
-          onChange={weatherFormSearchOnChangeHandler}
-        />
+        <div className="flex flex-row justify-center">
+          <Form
+            schema={formSchema}
+            formData={weatherSearchFormData}
+            onChange={weatherFormSearchOnChangeHandler}
+            onSubmit={fetchCity} // OR Auto complete and fetchWeather?
+          />
+        </div>
 
         <div className="flex flex-col items-center">
           <p>

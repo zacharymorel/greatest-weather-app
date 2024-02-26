@@ -1,28 +1,72 @@
-function Form(props: FormProps): React.ReactNode {
-  const { formData, schema, onChange, onSubmit } = props;
+function buildForm({
+  schema,
+  onSubmit,
+  onChange,
+  formData,
+}: FormProps): React.ReactNode {
+  if (!schema || schema.length === 0) return null;
 
-  function buildForm(): React.ReactNode {
-    if (!schema || schema.length === 0) return null;
+  function deriveFormElement(n: FormSchema): React.ReactNode {
+    if (!n) return null;
 
-    const conditionalProps: { onSubmit?: Function | any } = {};
-    if (onSubmit) conditionalProps.onSubmit = onSubmit;
+    // *NOTE: There would be more cases here. See inputType in FormSChema
+    // .i.e., dropdown and such if needed.
+    switch (n.inputType) {
+      case 'number':
+        return (
+          <input
+            className="text-white bg-dark-4 p-2 mr-2 rounded last:mr-0 "
+            key={n.name}
+            type={n.inputType}
+            onChange={onChange ? (e) => onChange(e.target.value) : () => {}}
+            value={formData[n.name]}
+            placeholder={n.placeHolder || ''}
+          />
+        );
+        break;
 
-    return schema.map((n) => {
-      return (
-        <input
-          className="text-black"
-          key={n.name}
-          type={n.inputType}
-          onChange={onChange ? (e) => onChange(e.target.value) : () => {}}
-          value={formData[n.name]}
-          placeholder={n.placeHolder || ''}
-          {...conditionalProps}
-        />
-      );
-    });
+      case 'text':
+        return (
+          <input
+            className="text-white bg-dark-4 p-2 mr-2 rounded last:mr-0 "
+            key={n.name}
+            type={n.inputType}
+            onChange={onChange ? (e) => onChange(e.target.value) : () => {}}
+            value={formData[n.name]}
+            placeholder={n.placeHolder || ''}
+          />
+        );
+        break;
+
+      case 'submit':
+        return (
+          <input
+            className="text-white bg-dark-4 p-2 mr-2 rounded last:mr-0 "
+            key={n.name}
+            type={n.inputType}
+            value={n.buttonValue}
+            onClick={onSubmit ? () => onSubmit() : () => {}}
+          />
+        );
+        break;
+
+      default:
+        return null;
+    }
   }
 
-  return <form onSubmit={(e) => e.preventDefault()}>{buildForm()}</form>;
+  return schema.map((n) => deriveFormElement(n));
+}
+
+function Form(props: FormProps): React.ReactNode {
+  return (
+    <form
+      className="bg-dark-3 p-4 border border-solid rounded"
+      onSubmit={(e) => e.preventDefault()}
+    >
+      {buildForm(props)}
+    </form>
+  );
 }
 
 export default Form;

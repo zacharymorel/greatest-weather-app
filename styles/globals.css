@@ -2,28 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
+/*
+ Need to keep tailwind theme config and css variables consistent. 
+Can I import the tailwind theme values in to css variables? 
+*/
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+:root {
+  --black: 0, 0, 0;
+  --dark-0: 5, 5, 5;
+  --dark-1: 18, 18, 18;
+  --dark-2: 44, 44, 44;
+  --dark-3: 56, 56, 56;
+  --white: 255, 255, 255;
+  --radius-half: '50%';
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  color: rgb(var(--white));
+  background-color: rgb(var(--dark-1));
 }
 
 @layer utilities {
@@ -45,10 +41,6 @@ body {
 }
 
 .ball {
-  position: absolute;
-  width: 3px;
-  height: 3px;
-  background-color: green;
-  border-radius: 50%;
+  background-color: rgb(6, 37, 6);
   animation: bounce 0.5s ease-in-out infinite;
 }

@@ -14,8 +14,9 @@ interface FormSchema {
     | 'submit'
     | 'button'
     | 'dropdown';
-  label: string;
+  label?: string;
   name: string;
+  buttonValue?: string;
   placeHolder?: string;
   dropDownListItems?: [React.ReactNode];
 }
