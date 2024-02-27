@@ -26,6 +26,23 @@ Site is live at https://greatest-weather-app.vercel.app/
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+Libraries and apis used in this repository:
+
+1. Typescript
+2. ReactJS
+3. NodeJS
+4. NextJS
+5. Tailwind CSS
+6. Zustand
+7. eslint
+8. Prettier
+9. Google Places API
+10. Google Geocoding API
+11. OpenWeatherMap API
+12. AWS Lambda
+13. AWS Gateway
+
+<br>
 Client code lives in directories.
 
 1. /pages

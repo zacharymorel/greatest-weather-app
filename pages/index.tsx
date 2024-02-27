@@ -100,7 +100,8 @@ function HomePage() {
     try {
       if (newWeatherState.city?.length > 2) {
         const res = await fetch(
-          `/api/weather/city?city=${newWeatherState.city}`
+          `/api/weather/city?city=${newWeatherState.city}`,
+          { method: 'GET' }
         );
         const googlePredictions = await res.json();
         predictionsList = predictionsList.concat(googlePredictions.predictions);
@@ -121,7 +122,9 @@ function HomePage() {
         (details) => details.placeId === p.placeId
       );
 
-      const res = await fetch(`/api/weather/city/geo/${p.placeId}`);
+      const res = await fetch(`/api/weather/city/geo/${p.placeId}`, {
+        method: 'GET',
+      });
       const googlePlaceGeo = await res.json();
       if (googlePlaceGeo.lat && googlePlaceGeo.lng) {
         setSelectedCityGeo(googlePlaceGeo);
@@ -148,7 +151,8 @@ function HomePage() {
       if (country) cityState.country = country;
 
       const res = await fetch(
-        `/api/weather?lat=${selectedCityGeo?.lat}&lng=${selectedCityGeo?.lng}`
+        `/api/weather?lat=${selectedCityGeo?.lat}&lng=${selectedCityGeo?.lng}`,
+        { method: 'GET' }
       );
       const weatherData = await res.json();
       const newWeatherState = Object.assign({}, cityState, weatherData);
@@ -159,7 +163,8 @@ function HomePage() {
       const matchingPlace = predictions.find(
         (dets) => dets.description === weatherSearchFormData.city
       );
-      if (matchingPlace) add(matchingPlace);
+      if (matchingPlace && !new Set(predictions).has(matchingPlace))
+        add(matchingPlace);
     } catch (error) {
       console.error('Error fetching place weather:', error);
     } finally {
@@ -167,15 +172,29 @@ function HomePage() {
     }
   }
 
-  async function fetchWeather() {
-    setFetchingWeather(true);
-
+  async function defaultLocation(loc: GeolocationPosition) {
     try {
-      const response = await fetch('/api/weather');
-      const weatherData = await response.json();
+      const res = await fetch(
+        `/api/weather/city/details?lat=${loc.coords.latitude}&lng=${loc.coords.longitude}`,
+        { method: 'GET' }
+      );
+      const placeDetails: { results: google.maps.GeocoderResult[] } =
+        await res.json();
+      const { formatted_address, place_id, geometry } = placeDetails.results[2];
 
-      const [city, state, country] = weatherSearchFormData?.city.split(',');
+      const p = {
+        description: formatted_address,
+        placeId: place_id,
+      };
 
+      // add history for future predictions
+      if (!new Set(predictions).has(p)) add(p);
+
+      // set input
+      setWeatherSearchFormData({ city: formatted_address });
+
+      // setWeather
+      const [city, state, country] = formatted_address.split(',');
       const cityState: {
         city?: string;
         state?: string;
@@ -185,9 +204,16 @@ function HomePage() {
       if (state) cityState.state = state;
       if (country) cityState.country = country;
 
-      setWeather(weatherData);
+      const res2 = await fetch(
+        `/api/weather?lat=${geometry.location.lat}&lng=${geometry.location.lng}`,
+        { method: 'GET' }
+      );
+      const weatherData = await res2.json();
+      const newWeatherState = Object.assign({}, cityState, weatherData);
+
+      setWeather(newWeatherState);
     } catch (error) {
-      console.error('Error fetching weather:', error);
+      console.error(error);
     } finally {
       setFetchingWeather(false);
     }
@@ -202,6 +228,22 @@ function HomePage() {
     weatherSearchFormData.city,
     weatherSearchFormData.city.length,
   ]);
+
+  useEffect(() => {
+    // 1. Client Get browser location & send lat and long to API.
+    // 3. API reverse GEO CODES to get City Place Details. API returns details.
+    // 4. Client calls weather app with GEO code.
+    setFetchingWeather(true);
+    navigator.geolocation.getCurrentPosition(
+      (loc) => {
+        defaultLocation(loc);
+      },
+      (err) => {
+        console.error(err);
+        setFetchingWeather(false);
+      }
+    );
+  }, []);
 
   return (
     <div className="min-h-screen text-white">

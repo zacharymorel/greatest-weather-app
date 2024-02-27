@@ -11,6 +11,8 @@ const API_GOOGLE_PLACES_URL =
   'https://maps.googleapis.com/maps/api/place/autocomplete/json';
 const API_GOOGLE_PLACE_DETAILS_URL =
   'https://maps.googleapis.com/maps/api/place/details/json';
+const API_GOOGLE_PLACE_DETAILS_GEOCODE_URL =
+  'https://maps.googleapis.com/maps/api/geocode/json';
 const API_GOOGLE_PLACES_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const OPEN_WEATHER_API_KEY = process.env.OPEN_WEATHER_MAP_API_KEY;
 
@@ -35,8 +37,6 @@ async function getWeather(
   res: NextApiResponse
 ): Promise<void> {
   try {
-    // Extract query parameters for city and units (optional).
-    // const { units = 'imperial', lat, lng, city, state, country } = req.query;
     const { units = 'imperial', lat, lng } = req.query;
 
     // Make a request to the OpenWeatherMap API.
@@ -60,6 +60,31 @@ async function getWeather(
   } catch (error) {
     // Handle errors, such as city not found or API issues.
     commonInternalServerErrorHandler(error, res, 'api/weather error: ');
+  }
+}
+
+// /api/weather/city/details
+async function getCityDetailsWithGeo(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  try {
+    const { lat, lng } = req.query;
+    const { data } = await axios.get(API_GOOGLE_PLACE_DETAILS_GEOCODE_URL, {
+      params: {
+        latlng: `${lat},${lng}`,
+        key: API_GOOGLE_PLACES_KEY,
+      },
+    });
+
+    return res.status(200).json(data);
+  } catch (error) {
+    // Handle errors, such as place details not found or API issues.
+    commonInternalServerErrorHandler(
+      error,
+      res,
+      'api/weather/city/details error: '
+    );
   }
 }
 
@@ -112,6 +137,7 @@ async function getCityGeo(
       params: {
         place_id: placeId,
         key: API_GOOGLE_PLACES_KEY,
+        fields: 'geometry',
       },
     });
 
@@ -141,6 +167,9 @@ export default async function handle(
     case 'GET':
       if (query.slug?.includes('city') && query.slug?.includes('geo'))
         return getCityGeo(req, res);
+
+      if (query.slug?.includes('city') && query.slug?.includes('details'))
+        return getCityDetailsWithGeo(req, res);
 
       if (query.slug?.includes('city')) return getCities(req, res);
 
