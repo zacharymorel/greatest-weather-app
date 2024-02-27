@@ -8,11 +8,11 @@ Can I import the tailwind theme values in to css variables?
 */
 
 :root {
-  --black: 0, 0, 0;
-  --dark-0: 5, 5, 5;
-  --dark-1: 18, 18, 18;
-  --dark-2: 44, 44, 44;
-  --dark-3: 56, 56, 56;
+  --dark-0: 0, 0, 0;
+  --dark-1: 5, 5, 5;
+  --dark-2: 18, 18, 18;
+  --dark-3: 44, 44, 44;
+  --dark-4: 56, 56, 56;
   --white: 255, 255, 255;
   --radius-half: '50%';
 }

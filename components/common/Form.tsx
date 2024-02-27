@@ -3,10 +3,10 @@ function buildForm({
   onSubmit,
   onChange,
   formData,
-}: FormProps): React.ReactNode {
+}: IFormProps): React.ReactNode {
   if (!schema || schema.length === 0) return null;
 
-  function deriveFormElement(n: FormSchema): React.ReactNode {
+  function deriveFormElement(n: IFormSchema): React.ReactNode {
     if (!n) return null;
 
     // *NOTE: There would be more cases here. See inputType in FormSChema
@@ -15,10 +15,14 @@ function buildForm({
       case 'number':
         return (
           <input
-            className="text-white bg-dark-4 p-2 mr-2 rounded last:mr-0 "
+            className="text-white border-solid bg-dark-4 border-dark-4 p-2 mr-2 rounded last:mr-0"
             key={n.name}
             type={n.inputType}
-            onChange={onChange ? (e) => onChange(e.target.value) : () => {}}
+            onChange={
+              onChange
+                ? (e) => onChange({ [n.name]: e.target.value })
+                : () => {}
+            }
             value={formData[n.name]}
             placeholder={n.placeHolder || ''}
           />
@@ -28,10 +32,14 @@ function buildForm({
       case 'text':
         return (
           <input
-            className="text-white bg-dark-4 p-2 mr-2 rounded last:mr-0 "
+            className="text-white border-solid bg-dark-4 border-dark-4 p-2 mr-2 rounded last:mr-0 "
             key={n.name}
             type={n.inputType}
-            onChange={onChange ? (e) => onChange(e.target.value) : () => {}}
+            onChange={
+              onChange
+                ? (e) => onChange({ [n.name]: e.target.value })
+                : () => {}
+            }
             value={formData[n.name]}
             placeholder={n.placeHolder || ''}
           />
@@ -41,7 +49,7 @@ function buildForm({
       case 'submit':
         return (
           <input
-            className="text-white bg-dark-4 p-2 mr-2 rounded last:mr-0 "
+            className="text-white border-solid bg-dark-4 border-dark-4 p-2 mr-2 rounded last:mr-0 "
             key={n.name}
             type={n.inputType}
             value={n.buttonValue}
@@ -58,10 +66,10 @@ function buildForm({
   return schema.map((n) => deriveFormElement(n));
 }
 
-function Form(props: FormProps): React.ReactNode {
+function Form(props: IFormProps): React.ReactNode {
   return (
     <form
-      className="bg-dark-3 p-4 border border-solid rounded"
+      className="bg-dark-3 p-4 border border-solid border-dark-4 rounded"
       onSubmit={(e) => e.preventDefault()}
     >
       {buildForm(props)}

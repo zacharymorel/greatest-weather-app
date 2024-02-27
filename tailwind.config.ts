@@ -18,6 +18,9 @@ const config: Config = {
       borderRadius: {
         half: '50%',
       },
+      borderColor: ({ theme }) => ({
+        ...theme('colors'),
+      }),
     },
   },
   plugins: [],

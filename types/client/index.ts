@@ -1,11 +1,11 @@
-interface Weather {
+export interface IWeather {
   temperature: number;
   condition: string;
   humidity: number;
   wind: number;
 }
 
-interface FormSchema {
+export interface IFormSchema {
   inputType:
     | 'text'
     | 'radio'
@@ -21,9 +21,16 @@ interface FormSchema {
   dropDownListItems?: [React.ReactNode];
 }
 
-interface FormProps {
+export interface IFormProps {
   onSubmit?: Function;
-  schema: FormSchema[];
+  schema: IFormSchema[];
   onChange?: Function;
   formData: any;
 }
+
+export interface IGooglePlacesPrediction {
+  description: string;
+  placeId: string;
+}
+
+export type IGooglePlacesPredictions = [IGooglePlacesPrediction];
