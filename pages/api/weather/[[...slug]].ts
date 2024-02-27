@@ -35,13 +35,17 @@ async function getWeather(
 ): Promise<void> {
   try {
     // Extract query parameters for city and units (optional).
-    const { units = 'imperial' } = req.query;
+    const {
+      units = 'imperial',
+      lat = '42.7095794',
+      lng = '-77.0564464',
+    } = req.query;
 
     // Make a request to the OpenWeatherMap API.
     const { data } = await axios.get(API_WEATHER_URL, {
       params: {
-        lat: '42.7095794',
-        lon: '-77.0564464',
+        lat,
+        lon: lng,
         units,
         appid: OPEN_WEATHER_API_KEY,
       },
@@ -61,13 +65,15 @@ async function getWeather(
   }
 }
 
-async function getCity(
+async function getCities(
   req: NextApiRequest,
   res: NextApiResponse
 ): Promise<void> {
   try {
+    // Extract city as needed.
     const { city = 'london' } = req.query;
 
+    // Make request to Google Places autocomplete API for list
     const { data } = await axios.get(API_GOOGLE_PLACES_URL, {
       params: {
         input: city,
@@ -97,9 +103,11 @@ async function getCityGeo(
   res: NextApiResponse
 ): Promise<void> {
   try {
+    // extract place id from slug if it is available
     const placeId: string | undefined = req.query.slug?.[2];
     if (!placeId) return res.status(400).json({ message: 'missing place id' });
 
+    // Make a request to Google Places details  api
     const { data } = await axios.get(API_GOOGLE_PLACE_DETAILS_URL, {
       params: {
         place_id: placeId,
@@ -108,8 +116,8 @@ async function getCityGeo(
     });
 
     const cityGEO: ICityGeoTO = {
-      lat: data?.result?.geometry.lat,
-      lng: data?.result?.geometry.lng,
+      lat: data?.result?.geometry.location.lat,
+      lng: data?.result?.geometry.location.lng,
     };
 
     return res.status(200).json(cityGEO);
@@ -135,7 +143,7 @@ export default async function handle(
       if (query.slug?.includes('city') && query.slug?.includes('geo'))
         return getCityGeo(req, res);
 
-      if (query.slug?.includes('city')) return getCity(req, res);
+      if (query.slug?.includes('city')) return getCities(req, res);
 
       return getWeather(req, res);
     default:

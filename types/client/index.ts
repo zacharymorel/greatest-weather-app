@@ -3,6 +3,9 @@ export interface IWeather {
   condition: string;
   humidity: number;
   wind: number;
+  city?: string;
+  state?: string;
+  country?: string;
 }
 
 export interface IFormSchema {

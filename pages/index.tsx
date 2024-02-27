@@ -12,7 +12,7 @@ import {
 } from '@/types/client';
 
 // TODO: Store history of places selected and searched in Context global?
-// TODO: Autocomplete will need styling... Is that another type for the form?? A special case or do I create a separate div to show city results??
+// TODO: Consider case where they search early prior to selected value. API needs to do a quick geo search if it is only passed a city? Just type in city and hit submit.
 
 const formSchema: IFormSchema[] = [
   {
@@ -38,7 +38,7 @@ function derivePredictionsDropdown(
     list?.map((p) => (
       <li
         key={p.placeId}
-        className="text-white border-solid bg-dark-3 border-dark-4 p-1"
+        className="cursor-pointer text-white border-solid bg-dark-3 border-dark-4 p-1"
         data-place-id={p.placeId}
         data-place-des={p.description}
         onClick={(e: React.MouseEvent<HTMLLIElement>) => {
@@ -56,18 +56,32 @@ function derivePredictionsDropdown(
 }
 
 function HomePage() {
+  // Current weather state
   const [weather, setWeather] = useState<IWeather | null>(null);
+
+  // A loading state weather data
   const [fetchingWeather, setFetchingWeather] = useState<boolean>(false);
 
-  const [weatherSearchFormData, setWeatherSearchFormData] = useState({
+  // Form data for controlled form elements
+  const [weatherSearchFormData, setWeatherSearchFormData] = useState<{
+    city: string;
+  }>({
     city: '',
   });
 
+  // Predictions city list
   const [predictions, setPredictions] = useState<IGooglePlacesPredictions | []>(
     []
   );
 
+  // Predictions city list show
   const [predictionsPrompt, setPredictionsPrompt] = useState<boolean>(false);
+
+  // stores geo for selected city
+  const [selectedCityGeo, setSelectedCityGeo] = useState<{
+    lat: number;
+    lng: number;
+  }>();
 
   async function weatherFormSearchOnChangeHandler(newWeatherState: any) {
     setWeatherSearchFormData(
@@ -93,23 +107,70 @@ function HomePage() {
 
   async function getCityGeo(p: IGooglePlacesPrediction) {
     try {
+      const matchingPlace = predictions.find(
+        (details) => details.placeId === p.placeId
+      );
+
       const res = await fetch(`/api/weather/city/geo/${p.placeId}`);
-      const googlePlace = await res.json();
-      console.log('googlePlace: ', googlePlace);
+      const googlePlaceGeo = await res.json();
+      if (googlePlaceGeo.lat && googlePlaceGeo.lng) {
+        setSelectedCityGeo(googlePlaceGeo);
+        setWeatherSearchFormData({ city: matchingPlace?.description ?? '' });
+      }
     } catch (error) {
       console.error('Error fetching place geo:', error);
     }
   }
 
-  function fetchCityWeather() {}
+  async function fetchCityWeather() {
+    try {
+      setPredictionsPrompt(false);
+      setFetchingWeather(true);
+      const res = await fetch(
+        `/api/weather?lat=${selectedCityGeo?.lat}&lng=${selectedCityGeo?.lng}`
+      );
+      const weatherData = await res.json();
+
+      const [city, state, country] = weatherSearchFormData?.city.split(',');
+
+      const cityState: {
+        city?: string;
+        state?: string;
+        country?: string;
+      } = {};
+      if (city) cityState.city = city;
+      if (state) cityState.state = state;
+      if (country) cityState.country = country;
+
+      setWeather(Object.assign({}, cityState, weatherData));
+
+      console.log('fetchCityWeather resp:: ', weatherData);
+    } catch (error) {
+      console.error('Error fetching place weather:', error);
+    } finally {
+      setFetchingWeather(false);
+    }
+  }
 
   async function fetchWeather() {
     setFetchingWeather(true);
 
     try {
       const response = await fetch('/api/weather');
-      const data = await response.json();
-      setWeather(data);
+      const weatherData = await response.json();
+
+      const [city, state, country] = weatherSearchFormData?.city.split(',');
+
+      const cityState: {
+        city?: string;
+        state?: string;
+        country?: string;
+      } = {};
+      if (city) cityState.city = city;
+      if (state) cityState.state = state;
+      if (country) cityState.country = country;
+
+      setWeather(weatherData);
     } catch (error) {
       console.error('Error fetching weather:', error);
     } finally {
@@ -117,9 +178,9 @@ function HomePage() {
     }
   }
 
-  useEffect(() => {
-    fetchWeather();
-  }, []);
+  // useEffect(() => {
+  //   fetchWeather();
+  // }, []);
 
   return (
     <div className="min-h-screen text-white">
@@ -137,7 +198,7 @@ function HomePage() {
               onChange={weatherFormSearchOnChangeHandler}
               onSubmit={fetchCityWeather} // OR Auto complete and fetchWeather?
             />
-            <ul className="flex flex-col float-start last:border last:border-solid last:border-dark-4 :last rounded-b ">
+            <ul className="flex flex-col float-start border border-t-0 border-solid border-dark-4 rounded-b">
               {predictionsPrompt &&
                 derivePredictionsDropdown(
                   predictions,
@@ -151,14 +212,14 @@ function HomePage() {
         <section className="flex flex-col items-center">
           <p>
             <span className="mr-6 relative">
-              City: {fetchingWeather ? <Loader /> : ''}
+              City: {fetchingWeather ? <Loader /> : weather?.city}
             </span>
             <span className="mr-6 relative">
               {' '}
-              State: {fetchingWeather ? <Loader /> : ''}
+              State: {fetchingWeather ? <Loader /> : weather?.state}
             </span>
             <span className="mr-6 relative">
-              Country: {fetchingWeather ? <Loader /> : ''}
+              Country: {fetchingWeather ? <Loader /> : weather?.country}
             </span>
           </p>
           <p>

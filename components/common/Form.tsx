@@ -1,3 +1,6 @@
+// Relative
+import { IFormProps, IFormSchema } from '@/types/client';
+
 function buildForm({
   schema,
   onSubmit,
@@ -15,7 +18,7 @@ function buildForm({
       case 'number':
         return (
           <input
-            className="text-white border-solid bg-dark-4 border-dark-4 p-2 mr-2 rounded last:mr-0"
+            className="text-white bg-dark-4 p-2 mr-2 last:mr-0"
             key={n.name}
             type={n.inputType}
             onChange={
@@ -32,7 +35,7 @@ function buildForm({
       case 'text':
         return (
           <input
-            className="text-white border-solid bg-dark-4 border-dark-4 p-2 mr-2 rounded last:mr-0 "
+            className="text-white bg-dark-4 p-2 mr-2 last:mr-0 "
             key={n.name}
             type={n.inputType}
             onChange={
@@ -49,7 +52,7 @@ function buildForm({
       case 'submit':
         return (
           <input
-            className="text-white border-solid bg-dark-4 border-dark-4 p-2 mr-2 rounded last:mr-0 "
+            className="cursor-pointer text-white bg-dark-4 p-2 mr-2 last:mr-0 "
             key={n.name}
             type={n.inputType}
             value={n.buttonValue}
