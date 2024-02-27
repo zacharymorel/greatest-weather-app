@@ -12,6 +12,8 @@ Second, run the development server:
 npm npm run dev
 ```
 
+> FYI there are two API keys needed for this repo to work locally. Ask or supply you're own.
+
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 <br>
