@@ -36,6 +36,7 @@ export interface IFormProps {
 export interface IGooglePlacesPrediction {
   description: string;
   placeId: string;
+  inHistoricalSearchList?: string;
 }
 
 export type IGooglePlacesPredictions = IGooglePlacesPrediction[];

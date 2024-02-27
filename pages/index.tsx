@@ -11,6 +11,7 @@ import {
   IGooglePlacesPredictions,
   IWeather,
 } from '@/types/client';
+import RemoveIcon from '@/components/common/RemoveIcon';
 
 function formSchema(shouldDisableSubmit: boolean = false): IFormSchema[] {
   return [
@@ -32,15 +33,16 @@ function formSchema(shouldDisableSubmit: boolean = false): IFormSchema[] {
 
 function derivePredictionsDropdown(
   list: IGooglePlacesPredictions | [],
-  selectPrediction: Function
+  selectPrediction: Function,
+  removePrediction: Function
 ) {
   if (!list) return null;
 
   return (
-    list?.map((p) => (
+    list?.map((p, i) => (
       <li
-        key={p.placeId}
-        className="cursor-pointer text-white border-solid bg-dark-3 border-dark-4 p-1 hover:bg-dark-4"
+        key={p.placeId + i.toString()}
+        className="relative cursor-pointer text-white border-solid bg-dark-3 border-dark-4 p-1 hover:bg-dark-4"
         data-place-id={p.placeId}
         data-place-des={p.description}
         onClick={(e: React.MouseEvent<HTMLLIElement>) => {
@@ -52,6 +54,9 @@ function derivePredictionsDropdown(
         }}
       >
         {p.description}
+        {p?.inHistoricalSearchList === 'true' && (
+          <RemoveIcon onClick={removePrediction} prediction={p} />
+        )}
       </li>
     )) || null
   );
@@ -76,7 +81,7 @@ function HomePage() {
   const [predictions, setPredictions] = useState<IGooglePlacesPredictions>([]);
 
   // globalState historical searches
-  const { historicalSearches, add } = useSearchStore() || [];
+  const { historicalSearches, add, remove } = useSearchStore() || [];
 
   // Predictions city list show
   const [predictionsPrompt, setPredictionsPrompt] = useState<boolean>(false);
@@ -163,8 +168,12 @@ function HomePage() {
       const matchingPlace = predictions.find(
         (dets) => dets.description === weatherSearchFormData.city
       );
-      if (matchingPlace && !new Set(predictions).has(matchingPlace))
-        add(matchingPlace);
+      if (
+        matchingPlace &&
+        !historicalSearches.find((p) => p.placeId === matchingPlace.placeId)
+      ) {
+        add({ ...matchingPlace, inHistoricalSearchList: 'true' });
+      }
     } catch (error) {
       console.error('Error fetching place weather:', error);
     } finally {
@@ -188,7 +197,9 @@ function HomePage() {
       };
 
       // add history for future predictions
-      if (!new Set(predictions).has(p)) add(p);
+      if (!historicalSearches.find((pl) => pl.placeId === p.placeId)) {
+        add({ ...p, inHistoricalSearchList: 'true' });
+      }
 
       // set input
       setWeatherSearchFormData({ city: formatted_address });
@@ -245,6 +256,20 @@ function HomePage() {
     );
   }, []);
 
+  // Reset predictions after removal of search city
+  useEffect(() => {
+    const nonHistoricalPredictions = predictions.filter((p) =>
+      p?.inHistoricalSearchList ? false : true
+    );
+    const pred = [...historicalSearches].concat(nonHistoricalPredictions);
+    return setPredictions(pred);
+  }, [historicalSearches]);
+
+  useEffect(() => {
+    if (weatherSearchFormData?.city?.length < 2)
+      return setPredictionsPrompt(false);
+  }, [weatherSearchFormData.city]);
+
   return (
     <div className="min-h-screen text-white">
       <main className="flex flex-col space-y-7">
@@ -267,7 +292,8 @@ function HomePage() {
                   predictions,
                   (p: IGooglePlacesPrediction) => {
                     getCityGeo(p);
-                  }
+                  },
+                  remove
                 )}
             </ul>
           </div>

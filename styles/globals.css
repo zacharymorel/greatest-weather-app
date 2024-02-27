@@ -44,3 +44,7 @@ body {
   background-color: rgb(6, 37, 6);
   animation: bounce 0.5s ease-in-out infinite;
 }
+
+.remove-prediction {
+  pointer-events: all;
+}
