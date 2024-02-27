@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 
 // Relative modules.
+import { useSearchStore } from '@/stores/weatherSearch';
 import Loader from '@/components/common/Loader';
 import Form from '@/components/common/Form';
 import {
@@ -11,22 +12,23 @@ import {
   IWeather,
 } from '@/types/client';
 
-// TODO: Store history of places selected and searched in Context global?
-// TODO: Consider case where they search early prior to selected value. API needs to do a quick geo search if it is only passed a city? Just type in city and hit submit.
-
-const formSchema: IFormSchema[] = [
-  {
-    inputType: 'text',
-    label: 'Search for a City',
-    name: 'city',
-    placeHolder: 'City...',
-  },
-  {
-    inputType: 'submit',
-    name: 'submit',
-    buttonValue: 'Get Weather!',
-  },
-];
+function formSchema(shouldDisableSubmit: boolean = false): IFormSchema[] {
+  return [
+    {
+      inputType: 'text',
+      label: 'Search for a City',
+      name: 'city',
+      placeHolder: 'City...',
+    },
+    {
+      inputType: 'submit',
+      name: 'submit',
+      disabled: shouldDisableSubmit,
+      feedback: '*Select a city.',
+      buttonValue: 'Get Weather!',
+    },
+  ];
+}
 
 function derivePredictionsDropdown(
   list: IGooglePlacesPredictions | [],
@@ -38,7 +40,7 @@ function derivePredictionsDropdown(
     list?.map((p) => (
       <li
         key={p.placeId}
-        className="cursor-pointer text-white border-solid bg-dark-3 border-dark-4 p-1"
+        className="cursor-pointer text-white border-solid bg-dark-3 border-dark-4 p-1 hover:bg-dark-4"
         data-place-id={p.placeId}
         data-place-des={p.description}
         onClick={(e: React.MouseEvent<HTMLLIElement>) => {
@@ -55,6 +57,7 @@ function derivePredictionsDropdown(
   );
 }
 
+// Main Component
 function HomePage() {
   // Current weather state
   const [weather, setWeather] = useState<IWeather | null>(null);
@@ -70,9 +73,10 @@ function HomePage() {
   });
 
   // Predictions city list
-  const [predictions, setPredictions] = useState<IGooglePlacesPredictions | []>(
-    []
-  );
+  const [predictions, setPredictions] = useState<IGooglePlacesPredictions>([]);
+
+  // globalState historical searches
+  const { historicalSearches, add } = useSearchStore() || [];
 
   // Predictions city list show
   const [predictionsPrompt, setPredictionsPrompt] = useState<boolean>(false);
@@ -83,26 +87,32 @@ function HomePage() {
     lng: number;
   }>();
 
-  async function weatherFormSearchOnChangeHandler(newWeatherState: any) {
+  // handle submit disabled
+  const [submitDisable, setSubmitDisable] = useState<boolean>(false);
+
+  async function getCityPredictions(newWeatherState: any) {
     setWeatherSearchFormData(
       Object.assign({}, weatherSearchFormData, newWeatherState)
     );
+    let predictionsList: IGooglePlacesPredictions = [];
+    predictionsList = predictionsList.concat(historicalSearches);
 
-    console.log('newWeatherState:: ', newWeatherState);
-
-    if (newWeatherState.city?.length > 2) {
-      try {
+    try {
+      if (newWeatherState.city?.length > 2) {
         const res = await fetch(
           `/api/weather/city?city=${newWeatherState.city}`
         );
         const googlePredictions = await res.json();
-        setPredictions(googlePredictions.predictions);
+        predictionsList = predictionsList.concat(googlePredictions.predictions);
         setPredictionsPrompt(true);
-      } catch (error) {
-        console.error('Error fetching places autocomplete:', error);
       }
+
+      setPredictions(predictionsList);
+    } catch (error) {
+      console.error('Error fetching places autocomplete:', error);
+    } finally {
+      setSubmitDisable(true);
     }
-    return;
   }
 
   async function getCityGeo(p: IGooglePlacesPrediction) {
@@ -116,6 +126,7 @@ function HomePage() {
       if (googlePlaceGeo.lat && googlePlaceGeo.lng) {
         setSelectedCityGeo(googlePlaceGeo);
         setWeatherSearchFormData({ city: matchingPlace?.description ?? '' });
+        setSubmitDisable(false);
       }
     } catch (error) {
       console.error('Error fetching place geo:', error);
@@ -126,13 +137,7 @@ function HomePage() {
     try {
       setPredictionsPrompt(false);
       setFetchingWeather(true);
-      const res = await fetch(
-        `/api/weather?lat=${selectedCityGeo?.lat}&lng=${selectedCityGeo?.lng}`
-      );
-      const weatherData = await res.json();
-
       const [city, state, country] = weatherSearchFormData?.city.split(',');
-
       const cityState: {
         city?: string;
         state?: string;
@@ -142,9 +147,19 @@ function HomePage() {
       if (state) cityState.state = state;
       if (country) cityState.country = country;
 
-      setWeather(Object.assign({}, cityState, weatherData));
+      const res = await fetch(
+        `/api/weather?lat=${selectedCityGeo?.lat}&lng=${selectedCityGeo?.lng}`
+      );
+      const weatherData = await res.json();
+      const newWeatherState = Object.assign({}, cityState, weatherData);
 
-      console.log('fetchCityWeather resp:: ', weatherData);
+      setWeather(newWeatherState);
+
+      // Global history set state
+      const matchingPlace = predictions.find(
+        (dets) => dets.description === weatherSearchFormData.city
+      );
+      if (matchingPlace) add(matchingPlace);
     } catch (error) {
       console.error('Error fetching place weather:', error);
     } finally {
@@ -178,9 +193,15 @@ function HomePage() {
     }
   }
 
-  // useEffect(() => {
-  //   fetchWeather();
-  // }, []);
+  useEffect(() => {
+    if (weatherSearchFormData.city.length < 2 && submitDisable) {
+      setSubmitDisable(false);
+    }
+  }, [
+    submitDisable,
+    weatherSearchFormData.city,
+    weatherSearchFormData.city.length,
+  ]);
 
   return (
     <div className="min-h-screen text-white">
@@ -193,10 +214,10 @@ function HomePage() {
         <section className="flex flex-col items-center">
           <div>
             <Form
-              schema={formSchema}
+              schema={formSchema(submitDisable)}
               formData={weatherSearchFormData}
-              onChange={weatherFormSearchOnChangeHandler}
-              onSubmit={fetchCityWeather} // OR Auto complete and fetchWeather?
+              onChange={getCityPredictions}
+              onSubmit={fetchCityWeather}
             />
             <ul className="flex flex-col float-start border border-t-0 border-solid border-dark-4 rounded-b">
               {predictionsPrompt &&

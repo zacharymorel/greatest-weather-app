@@ -24,22 +24,20 @@ function commonInternalServerErrorHandler(
       .status(error.response.status)
       .json({ message: error.response.data });
   } else {
-    console.log(internalConsoleMessage, error);
+    console.error(internalConsoleMessage, error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 }
 
+// /api/weather?lat=foo&lng=bar
 async function getWeather(
   req: NextApiRequest,
   res: NextApiResponse
 ): Promise<void> {
   try {
     // Extract query parameters for city and units (optional).
-    const {
-      units = 'imperial',
-      lat = '42.7095794',
-      lng = '-77.0564464',
-    } = req.query;
+    // const { units = 'imperial', lat, lng, city, state, country } = req.query;
+    const { units = 'imperial', lat, lng } = req.query;
 
     // Make a request to the OpenWeatherMap API.
     const { data } = await axios.get(API_WEATHER_URL, {
@@ -65,6 +63,7 @@ async function getWeather(
   }
 }
 
+// /api/weather/city?city=New+York
 async function getCities(
   req: NextApiRequest,
   res: NextApiResponse
@@ -98,6 +97,7 @@ async function getCities(
   }
 }
 
+// /api/weather/city/geo/[placeId]
 async function getCityGeo(
   req: NextApiRequest,
   res: NextApiResponse
@@ -137,7 +137,6 @@ export default async function handle(
   res: NextApiResponse
 ) {
   const { method, query } = req;
-  console.log('query: ', query);
   switch (method) {
     case 'GET':
       if (query.slug?.includes('city') && query.slug?.includes('geo'))

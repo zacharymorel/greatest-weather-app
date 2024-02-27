@@ -19,6 +19,8 @@ export interface IFormSchema {
     | 'dropdown';
   label?: string;
   name: string;
+  disabled?: boolean;
+  feedback?: string;
   buttonValue?: string;
   placeHolder?: string;
   dropDownListItems?: [React.ReactNode];
@@ -36,4 +38,4 @@ export interface IGooglePlacesPrediction {
   placeId: string;
 }
 
-export type IGooglePlacesPredictions = [IGooglePlacesPrediction];
+export type IGooglePlacesPredictions = IGooglePlacesPrediction[];
