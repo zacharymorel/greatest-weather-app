@@ -9,7 +9,7 @@ npm i
 Second, run the development server:
 
 ```bash
-npm npm run dev
+npm run dev
 ```
 
 > FYI there are two API keys needed for this repo to work locally. Ask or supply you're own.
