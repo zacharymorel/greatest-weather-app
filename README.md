@@ -26,6 +26,8 @@ Site is live at https://greatest-weather-app.vercel.app/
 
 ## Interesting Technical Bits
 
+This is just a simple (functionality focused) application. 
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 Libraries and apis used in this repository:
